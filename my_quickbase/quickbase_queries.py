@@ -3,7 +3,7 @@ import json
 import datetime
 import pathlib
 import requests
-from itertools import chain
+import itertools
 from typing import Generator
 # Own Modules
 from my_quickbase.settings import Q_REALM, Q_USER_TOKEN
@@ -68,7 +68,7 @@ class AppQuery(QuickbaseRawQuery):
             record_query.get_field_mapping()
             report_ids = record_query.get_reports('BACKUP')
             for report_id in report_ids:
-                records = chain.from_iterable(record_query.get_records(report_id))
+                records = itertools.chain.from_iterable(record_query.get_records(report_id))
                 self.export(records, label, report_id, files_destination)
 
     def export(self, data, label, report_id, files_destination):
@@ -129,8 +129,3 @@ class RecordsQuery(QuickbaseRawQuery):
             print(f"\rProcessing table {self.table_id}: {skip} / {json_response['metadata']['totalRecords']} records",
                   end='')
             yield json_response
-
-
-if __name__ == '__main__':
-    main_query = AppQuery('bnz3i8d4p')
-    main_query.complete_backup()
