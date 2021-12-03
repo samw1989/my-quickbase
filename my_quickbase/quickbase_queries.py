@@ -91,7 +91,7 @@ class RecordsQuery(QuickbaseRawQuery):
         super().__init__(realm, token)
         self.app_id = str(app_id)
         self.table_id = str(table_id)
-        self.params = {'tableId': self.table_id}
+        self.params = {'tableId': self.table_id, 'top': 5000}
         self.field_mapping = None
 
     def get_field_mapping(self) -> None:
