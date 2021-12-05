@@ -1,3 +1,4 @@
 /my_quickbase/settings.ini
 /my_quickbase/exports/
 /tests/.pytest_cache/
+/my_quickbase/log.log

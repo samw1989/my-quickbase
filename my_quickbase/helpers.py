@@ -1,8 +1,10 @@
 import logging
+from logging.handlers import RotatingFileHandler
+from pathlib import Path
+from my_quickbase import logger
 
 
 # Helper Funcs and Exceptions
-
 class AttrNotSet(NotImplementedError):
     pass
 
@@ -18,13 +20,12 @@ def parse_response(response):
         if not parsed_response:
             raise AttributeError("JSON response empty")
     except AttributeError as e:
-        return None  # TODO add logging
+        logger.warning(f'{response} produced error:\n{e}', exc_info=False)
     else:
         return parsed_response
 
 
 # Helper Class Decorators
-
 def check_attr_exists(attr_to_check):
     """ Prevents methods from being called unless particular attribute is passed in as parameter to class decorator """
     # Class Decorator
@@ -48,3 +49,7 @@ def check_attr_exists(attr_to_check):
             setattr(cls, method_name, method_decorator(getattr(cls, method_name)))
         return cls
     return class_decorator
+
+
+if __name__ == '__main__':
+    parse_response(object)

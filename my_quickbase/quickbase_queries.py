@@ -8,10 +8,8 @@ from typing import Generator
 # Own Modules
 from my_quickbase.settings import Q_REALM, Q_USER_TOKEN
 from my_quickbase.helpers import check_attr_exists, parse_response, TokenAndRealmNotSet
+from my_quickbase import logger
 
-
-# TODO logging
-# TODO setup
 
 class QuickbaseRawQuery:
 
@@ -20,6 +18,8 @@ class QuickbaseRawQuery:
         Passing in realm or token overrides Q_REALM and Q_USER_TOKEN,
         which are taken from .ini or environment variables
         """
+        self.session = requests.Session()
+        self.app_id = None
         try:
             self.headers = {
                     'QB-Realm-Hostname': realm or Q_REALM,
@@ -30,9 +30,8 @@ class QuickbaseRawQuery:
         except NameError:
             raise TokenAndRealmNotSet("""Must either a) pass in realm and token parameters to class, or b) 
                                         set up QB Realm and QB User Token in settings.ini or as environment variable""")
-
-        self.session = requests.Session()
-        self.app_id = None
+        else:
+            logger.info(f'Quickbase Query Initialized: {self}')
 
     def __repr__(self):
         return f"{self.__class__.__name__} - App ID: {self.app_id}. Realm: {self.headers['QB-Realm-Hostname']}"
@@ -62,23 +61,28 @@ class AppQuery(QuickbaseRawQuery):
         Backs up all reports across entire app if 'BACKUP' in report title,
         """
         tables = self.get_tables()
+        logger.info(f'Backing up {len(tables)} tables')
         for table in tables:
             label = table_id, table_name = table['id'], table['name']
             record_query = RecordsQuery(self.app_id, table_id, *self.headers.values())
             record_query.get_field_mapping()
             report_ids = record_query.get_reports('BACKUP')
             for report_id in report_ids:
+                logger.info(f'Backing up report {report_id} in {table_name}')
                 records = itertools.chain.from_iterable(record_query.get_records(report_id))
                 self.export(records, label, report_id, files_destination)
 
     def export(self, data, label, report_id, files_destination):
-        path = (pathlib.Path(f'exports/{datetime.date.today()}')
+        parent = pathlib.Path(__file__).resolve().parent
+        path = (pathlib.Path(f'{parent}/exports/{datetime.date.today()}')
                 if files_destination is None else pathlib.Path(files_destination))
         path.mkdir(parents=True, exist_ok=True)
         final_path = f'{path}/{self.app_id}_{label[0]}_{label[1]}_report_{report_id}'
         print('\nExporting', label)
         with open(f'{final_path}.json', 'w') as file:
-            json.dump(list(data), file, ensure_ascii=False, indent=4)
+            final_data = list(data)
+            json.dump(final_data, file, ensure_ascii=False, indent=4)
+        logger.info(f'Produced .json at {final_path}, containing {len(final_data)} records')
 
 
 @check_attr_exists('field_mapping')

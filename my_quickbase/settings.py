@@ -1,5 +1,7 @@
 import os
 import decouple
+from my_quickbase import logger
+
 
 try:
     Q_USER_TOKEN = os.environ['Q_USER_TOKEN']
@@ -12,4 +14,4 @@ except KeyError:
     except decouple.UndefinedValueError:
         Q_USER_TOKEN = None
         Q_REALM = None
-        print("No User Token or Realm environment variables found")  # TODO convert to logging
+        logger.warning("No User Token or Realm environment variables found")
