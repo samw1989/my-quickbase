@@ -1,10 +1,11 @@
-# Built-ins and Externals
+# Built-ins
 import json
 import datetime
 import pathlib
-import requests
 import itertools
 from typing import Generator
+# Externals
+import requests
 # Own Modules
 from my_quickbase.settings import Q_REALM, Q_USER_TOKEN
 from my_quickbase.helpers import check_attr_exists, parse_response, TokenAndRealmNotSet
@@ -22,9 +23,9 @@ class QuickbaseRawQuery:
         self.app_id = None
         try:
             self.headers = {
-                    'QB-Realm-Hostname': realm or Q_REALM,
-                    'Authorization': token or Q_USER_TOKEN,
-                }
+                'QB-Realm-Hostname': realm or Q_REALM,
+                'Authorization': token or Q_USER_TOKEN,
+            }
             if None in self.headers.values():
                 raise NameError
         except NameError:
@@ -87,7 +88,6 @@ class AppQuery(QuickbaseRawQuery):
 
 @check_attr_exists('field_mapping')
 class RecordsQuery(QuickbaseRawQuery):
-
     """ Requires both an app_id and table_id. Methods can only be run once field_mapping attribute is set (achieved
     by calling get_field_mapping method). """
 
@@ -110,7 +110,6 @@ class RecordsQuery(QuickbaseRawQuery):
         return report_ids
 
     def get_records(self, report_id: str, **additional_params) -> Generator[Generator, None, None]:
-
         """ Returns a generator expression comprising an iterable of other generator objects,
         each representing an API call. The actual calls are only made when something is done with the data
         (e.g. exporting to JSON)"""

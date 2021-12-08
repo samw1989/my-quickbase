@@ -2,6 +2,7 @@ import logging
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
+
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 print_handler = logging.StreamHandler()
