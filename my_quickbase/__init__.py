@@ -2,7 +2,6 @@ import logging
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
-
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 print_handler = logging.StreamHandler()
@@ -18,4 +17,4 @@ file_handler.setFormatter(f_format)
 logger.addHandler(print_handler)
 logger.addHandler(file_handler)
 
-
+from quickbase_queries import AppQuery, RecordsQuery
