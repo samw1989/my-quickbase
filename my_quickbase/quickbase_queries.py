@@ -70,7 +70,7 @@ class AppQuery(QuickbaseRawQuery):
             report_ids = record_query.get_reports('BACKUP')
             for report_id in report_ids:
                 logger.info(f'Backing up report {report_id} in {table_name}')
-                records = itertools.chain.from_iterable(record_query.get_records(report_id))
+                records = itertools.chain.from_iterable(record_query.get_records(report_id, export=False))
                 self.export(records, label, report_id, files_destination)
 
     def export(self, data, label, report_id, files_destination):
@@ -109,14 +109,17 @@ class RecordsQuery(QuickbaseRawQuery):
         report_ids = [report['id'] for report in parse_response(response) if report_keyword in report['name']]
         return report_ids
 
-    def get_records(self, report_id: str, **additional_params) -> Generator[Generator, None, None]:
+    def get_records(self, report_id: str, export=True, **additional_params) -> Generator[Generator, None, None]:
         """ Returns a generator expression comprising an iterable of other generator objects,
         each representing an API call. The actual calls are only made when something is done with the data
         (e.g. exporting to JSON)"""
 
         api_url = f'https://api.quickbase.com/v1/reports/{report_id}/run'
         params = {**self.params, **additional_params}
-        return (self._fix_data(data) for data in self._get_records(api_url, params))
+        if not export:
+            return (self._fix_data(data) for data in self._get_records(api_url, params))
+        else:
+            return itertools.chain.from_iterable(self._fix_data(data) for data in self._get_records(api_url, params))
 
     def _fix_data(self, data: dict):
         return ({self.field_mapping[key]: value['value'] for key, value in row.items()} for row in data['data'])
