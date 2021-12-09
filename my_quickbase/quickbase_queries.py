@@ -74,8 +74,7 @@ class AppQuery(QuickbaseRawQuery):
                 self.export(records, label, report_id, files_destination)
 
     def export(self, data, label, report_id, files_destination):
-        parent = pathlib.Path(__file__).resolve().parent
-        path = (pathlib.Path(f'{parent}/exports/{datetime.date.today()}')
+        path = (pathlib.Path(f'exports/{datetime.date.today()}')
                 if files_destination is None else pathlib.Path(files_destination))
         path.mkdir(parents=True, exist_ok=True)
         final_path = f'{path}/{self.app_id}_{label[0]}_{label[1]}_report_{report_id}'
