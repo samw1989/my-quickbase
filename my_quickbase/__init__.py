@@ -17,4 +17,4 @@ file_handler.setFormatter(f_format)
 logger.addHandler(print_handler)
 logger.addHandler(file_handler)
 
-from quickbase_queries import AppQuery, RecordsQuery
+from my_quickbase.quickbase_queries import AppQuery, RecordsQuery

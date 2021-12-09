@@ -46,7 +46,3 @@ def check_attr_exists(attr_to_check):
             setattr(cls, method_name, method_decorator(getattr(cls, method_name)))
         return cls
     return class_decorator
-
-
-if __name__ == '__main__':
-    parse_response(object)
