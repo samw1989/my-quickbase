@@ -3,7 +3,7 @@ import json
 import datetime
 import pathlib
 import itertools
-from typing import Generator
+from typing import List, Dict
 # Externals
 import requests
 # Own Modules
@@ -108,7 +108,7 @@ class RecordsQuery(QuickbaseRawQuery):
         report_ids = [report['id'] for report in parse_response(response) if report_keyword in report['name']]
         return report_ids
 
-    def get_records(self, report_id: str, export=True, **additional_params) -> Generator[Generator, None, None]:
+    def get_records(self, report_id: str, export=True, **additional_params):
         """ Returns a generator expression comprising an iterable of other generator objects,
         each representing an API call. The actual calls are only made when something is done with the data
         (e.g. exporting to JSON)"""
@@ -134,3 +134,82 @@ class RecordsQuery(QuickbaseRawQuery):
             print(f"\rProcessing table {self.table_id}: {skip} / {json_response['metadata']['totalRecords']} records",
                   end='')
             yield json_response
+
+    def upsert_data(self, data: List[Dict], table_id: str = None):
+
+        """
+        Requires list of dictionaries, with each dictionary creating/updating a single record.
+        Each dictionary must contain a mapping of field ID number to a value.
+        To update a record, include a field_id and value for the Record ID number.
+
+        e.g. -> [
+                    {
+                      5: 'fish', # Text
+                      11: 100, # Numeric-Currency
+                      3: 1420 # Record ID #
+                     },
+                     {
+                      5: 'fosh',
+                      11: '$540',
+                      3: 1421
+                     },
+                ]
+
+        Maximum payload size of 10MB. You may need to divide data into chunks if large amount.
+
+        Formatting explained in Quickbase API docs here: https://developer.quickbase.com/fieldInfo
+
+        :param chunk_number: divides large uploads into chunks. Default is 10.
+        :param data:
+        :param rec_id: only for single record updates
+        :param table_id:
+        :return:
+        """
+        table_id = self.table_id if table_id is None else table_id
+        formatted_data = format_for_upsert(data)
+        upsert_json = {'to': table_id, 'data': formatted_data}
+        return self.upload(upsert_json, table_id)
+
+    def upload(self, payload, table_id):
+        api_url = f'https://api.quickbase.com/v1/records'
+        try:
+            response = self.session.post(api_url, headers=self.headers, json=payload)
+            try:
+                response.raise_for_status()
+            except requests.exceptions.HTTPError:
+                logger.error(f"Quickbase FAILURE: {response.json()}")
+                raise
+        except requests.exceptions.RequestException:
+            logger.error(f"Failure: Upload to {table_id}")
+            logger.error(f"Failed data: {str(payload['data'])[:1000]}")
+            for d in payload['data']:
+                upsert_json = {'to': table_id, 'data': [d]}
+                try:
+                    response = self.session.post(api_url, headers=self.headers, json=upsert_json)
+                    response.raise_for_status()
+                    logger.info('Successful re-attempt with', str(payload['data'][:1000]))
+                    logger.info(f"Response metadata: {response.json()['metadata']}")
+                    return response
+                except requests.exceptions.RequestException:
+                    logger.error(f"SPECIFIC ERROR: {str(payload['data'][:1000])}")
+        else:
+            logger.info(f"Successfully added {len(payload['data'])} record(s) in {table_id} with data: "
+                        f"\n{str(payload['data'][:1000])}...")
+            logger.info(f"Response metadata: {response.json()['metadata']}")
+            return response
+
+
+def format_for_upsert(dict_data) -> list:
+    return [{key: {'value': value} for key, value in row.items()} for row in dict_data]
+
+# def convert_from_pandas_dataframe(dataframe) -> list:
+#     """
+#     - Requires pandas to be installed.
+#     - Column names of dataframe must be field IDs
+#     - To upsert (rather than insert) include a column of Record IDs as well
+#     :param dataframe:
+#     :return:
+#     """
+#     parsed_dataframe = dataframe.fillna('')
+#     master_list = parsed_dataframe.to_dict('records')
+#     return master_list
