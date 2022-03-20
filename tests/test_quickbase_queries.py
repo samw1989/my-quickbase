@@ -103,7 +103,7 @@ class TestQuickbaseRecordQueries:
         def mock_get(*args, **kwargs):
             yield mock_response(sample_records_data).json()
         monkeypatch.setattr(records_query, '_get_records', mock_get)
-        records = list(itertools.chain.from_iterable(records_query.get_records('ccc222')))  # flattens (generator) iterables
+        records = list(records_query.get_records('ccc222'))
         assert records[1]['Name'] == 'Barnaby Jones'
         assert records[0]['Record ID'] == '566'
         assert len(records) == 2
