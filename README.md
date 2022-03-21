@@ -65,5 +65,75 @@ query.get_records(report_id='12345')
 records_lst = list(query.get_records(report_id='12345'))
 ```
 
+#### Insert or Update Records
+
+Inserting or updating a record relies on the RecordQuery and its upsert_data() method. 
+
+This method requires a list of dictionaries, with each dictionary creating/updating a single record.
+MyQuickbase then converts this input list into the format required by Quickbase's API.
+
+Each of these dictionaries used as an input parameter to the upsert_data() method must contain a mapping of field IDs 
+numbers to a value. For example:
+
+```   
+data = [
+            {
+              "5": 'fish',  # Text
+              "11": 100,  # Numeric-Currency
+              "3": 1420  # Record ID #
+             },
+             {
+              "5": 'fosh',
+              "11": '$540',
+              "3": 1421
+             },
+        ]
+```
+
+The maximum payload size is 10mb. You may need to divide data into chunks, if upserting a particular large amount.
+
+Formatting of data values is explained in Quickbase API docs here: https://developer.quickbase.com/fieldInfo
+
+Example use:
+
+```
+query = mq.RecordsQuery(app_id='xxxxxx', 
+                        table_id='xxxxx'
+                        realm='myrealm.quickbase.com', 
+                        token='QB-USER-TOKEN xxxxxxx')
+query.get_field_mapping()
+
+data_insert = [ 
+            {
+                 "6": "bish",
+                 "7": 800
+            },
+            {
+                "6": "bosh",
+                "7": 3500
+            }
+        ]
+        
+response = query.upsert_data(data_insert)  # Returns requests response, 
+                                           # including details of which records updated/inserted/failed
 
 
+```
+
+To update an existing record, simply include the record ID field ID as a key to each dictionary, 
+along with the record ID value. 
+
+e.g, if Record ID field ID is 3, and ID of record to be updated is 10:
+
+```
+data_update = [ 
+                {
+                     "6": "moose",
+                     "7": 340.
+                     "3": 10
+                }
+               ]
+
+response = query.upsert_data(data_update)
+
+```

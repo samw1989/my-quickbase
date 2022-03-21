@@ -144,14 +144,14 @@ class RecordsQuery(QuickbaseRawQuery):
 
         e.g. -> [
                     {
-                      5: 'fish', # Text
-                      11: 100, # Numeric-Currency
-                      3: 1420 # Record ID #
+                      "5": 'fish', # Text
+                      "11": 100, # Numeric-Currency
+                      "3": 1420 # Record ID #
                      },
                      {
-                      5: 'fosh',
-                      11: '$540',
-                      3: 1421
+                      "5": 'fosh',
+                      "11": '$540',
+                      "3": 1421
                      },
                 ]
 
