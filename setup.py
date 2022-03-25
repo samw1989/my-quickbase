@@ -5,7 +5,7 @@ readme = (pathlib.Path(__file__).parent / "README.md").read_text()
 
 setup(
     name='my-quickbase',
-    version='0.2.0',
+    version='0.2.1',
     url='https://github.com/samw1989/my-quickbase',
     packages=['my_quickbase'],
     license='MIT',
