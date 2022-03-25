@@ -1,5 +1,5 @@
 from my_quickbase import logger
-
+from requests.exceptions import HTTPError
 
 # Helper Funcs and Exceptions
 class AttrNotSet(NotImplementedError):
@@ -46,3 +46,12 @@ def check_attr_exists(attr_to_check):
             setattr(cls, method_name, method_decorator(getattr(cls, method_name)))
         return cls
     return class_decorator
+
+
+class QuickbaseConnectionError(HTTPError):
+    pass
+    # def __init__(self, error):
+    #     self.error = error
+    #
+    # def __repr__
+

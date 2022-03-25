@@ -6,9 +6,10 @@ import itertools
 from typing import List, Dict
 # Externals
 import requests
+from requests.exceptions import HTTPError
 # Own Modules
 from my_quickbase.settings import Q_REALM, Q_USER_TOKEN
-from my_quickbase.helpers import check_attr_exists, parse_response, TokenAndRealmNotSet
+from my_quickbase.helpers import check_attr_exists, parse_response, TokenAndRealmNotSet, QuickbaseConnectionError
 from my_quickbase import logger
 
 
@@ -39,6 +40,12 @@ class QuickbaseRawQuery:
 
     def _get_response(self, method: str, api_url: str, params: dict) -> requests.models.Response:
         response = self.session.request(method, api_url, params=params, headers=self.headers)
+        try:
+            response.raise_for_status()
+        except HTTPError:
+            error = "User token or App ID invalid" if "User token" in response.json()['description'] else response.json()
+            logger.error(error)
+            raise QuickbaseConnectionError(error)
         return response
 
 
@@ -97,10 +104,11 @@ class RecordsQuery(QuickbaseRawQuery):
         self.params = {'tableId': self.table_id, 'top': 5000}
         self.field_mapping = None
 
-    def get_field_mapping(self) -> None:
+    def get_field_mapping(self):
         api_url = 'https://api.quickbase.com/v1/fields'
         response = self._get_response('GET', api_url, self.params)
         self.field_mapping = {str(field_dict['id']): field_dict['label'] for field_dict in parse_response(response)}
+        return response
 
     def get_reports(self, report_keyword):
         api_url = 'https://api.quickbase.com/v1/reports'
